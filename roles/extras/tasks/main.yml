@@ -1,0 +1,64 @@
+---
+- name: include {{ ansible_distribution }}.yml
+  include_tasks: '{{ ansible_distribution }}.yml'
+
+
+- name: set timezone
+  timezone:
+    name: Europe/Brussels
+
+
+- name: install vim tmux git
+  package:
+    name:
+      - vim
+      - tmux
+      - git
+      - curl
+    state: present
+
+
+- name: set hosts file
+  lineinfile:
+    dest: "/etc/hosts"
+    line: "127.0.0.1 {{ item }}"
+    state: present
+  with_items:
+  - "{{ hostsfile }}"
+  when: hostsfile is defined
+
+
+- name: clone bash, vim, tmux
+  git:
+    repo: "https://github.com/OpsCharlie/{{ item }}.git"
+    dest: /root/{{ item }}
+  with_items:
+    - bash
+    - vim
+    - tmux
+  register: git
+
+
+- name: install bash vim tmux
+  shell: /bin/bash __deploy.sh
+  args:
+    chdir: /root/{{ item }}
+  with_items:
+    - bash
+    - vim
+    - tmux
+  when: git.changed
+
+
+#doesn't work with mitogen
+#- name: install pynvim
+#  pip:
+#    name: pynvim
+#    state: present
+#    executable: pip3
+
+- name: install pynvim
+  shell: pip3 install pynvim
+  register: pynvim
+  changed_when: '"Successfully" in pynvim.stdout'
+

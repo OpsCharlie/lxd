@@ -1,0 +1,65 @@
+---
+- name: install epel-release
+  package:
+    name:
+      - epel-release
+    state: present
+
+
+- name: install CentOS extras
+  package:
+    name:
+      - rsync
+      - bash-completion
+      - python34-pip
+      - gcc
+      - gcc-c++
+      - make
+      - python34-devel
+    state: present
+  when: ansible_distribution_major_version|int < 8
+
+
+- name: install CentOS extras
+  package:
+    name:
+      - rsync
+      - bash-completion
+      - python38-pip
+      - gcc
+      - gcc-c++
+      - make
+      - python38-devel
+    state: present
+  when: ansible_distribution_major_version|int >= 8
+
+
+- name: make sure bash-completion is loaded
+  copy:
+    dest: /etc/bash_completion
+    content: '. /usr/share/bash-completion/bash_completion'
+
+
+- name: remove add www-data group
+  group:
+    name: tape
+    gid: 33
+    state: absent
+  when: hostgid != '0'
+
+
+- name: add www-data group
+  group:
+    name: www-data
+    gid: 33
+    state: present
+  when: hostgid != '0'
+
+
+- name: add www-data user
+  user:
+    name: www-data
+    uid: 33
+    group: www-data
+    state: present
+  when: hostuid != '0'

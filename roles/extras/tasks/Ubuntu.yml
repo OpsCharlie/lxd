@@ -1,0 +1,41 @@
+---
+- name: Ensure the locale exists
+  locale_gen:
+    name: '{{ item }}'
+    state: present
+  loop:
+      - en_US.UTF-8
+      - nl_BE.UTF-8
+
+
+- name: install ubuntu extras
+  apt:
+    name:
+      - aptitude
+      - software-properties-common
+      - python3-pip
+    state: present
+
+
+- name: add ppa tmux
+  apt_repository:
+    repo: "ppa:hnakamur/tmux"
+  when: ansible_distribution_major_version == "16"
+
+
+- name: add www-data group
+  group:
+    name: www-data
+    gid: 33
+    state: present
+  when: hostgid != '0'
+
+
+- name: add www-data user
+  user:
+    name: www-data
+    uid: 33
+    group: www-data
+    state: present
+  when: hostuid != '0'
+

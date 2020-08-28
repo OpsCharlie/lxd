@@ -1,0 +1,27 @@
+---
+- name: install openSuse extras
+  package:
+    name:
+      - bash-completion
+      - python3-pip
+      - vim
+      - less
+      - timezone
+    state: present
+
+
+- name: add www-data group
+  group:
+    name: www-data
+    gid: 33
+    state: present
+  when: hostgid != '0'
+
+
+- name: add www-data user
+  user:
+    name: www-data
+    uid: 33
+    group: www-data
+    state: present
+  when: hostuid != '0'

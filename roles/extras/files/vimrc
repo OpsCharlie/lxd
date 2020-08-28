@@ -1,0 +1,35 @@
+set nu              "set numbers
+set wildmenu        "turnon wildmenu
+set showcmd
+set hlsearch        "Highlight search results
+set ruler           "Always show current position
+"set mouse=a         "use mouse
+set incsearch       "Makes search act like search in modern browsers
+set showmatch       " Show matching brackets when text indicator is over them
+"set expandtab	    " Use spaces instead of tabs
+"set smarttab        " Be smart when using tabs
+set shiftwidth=4    " 1 tab == 4 spaces
+set tabstop=4
+"set ai 	    	    " Auto indent
+"set si 		        " Smart indent
+set wrap 	        " Wrap lines
+set laststatus=2    " Always show the status line
+
+" Returns true if paste mode is enabled
+function! HasPaste()
+    if &paste
+        return 'PASTE MODE   '
+    en
+    return ''
+endfunction
+set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l " Format the status line
+
+" Delete trailing white space on save, useful for Python and CoffeeScript ;)
+func! DeleteTrailingWS()
+    exe "normal mz"
+    %s/\s\+$//ge
+    exe "normal `z"
+endfunc
+autocmd BufWrite *.py :call DeleteTrailingWS()
+autocmd BufWrite *.coffee :call DeleteTrailingWS()
+colorscheme mirodark

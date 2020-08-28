@@ -1,0 +1,27 @@
+---
+- hosts: all
+  remote_user: root
+
+  vars:
+  ## lxc
+    vmos: "u20"                 # ubuntu: "u12", "u14", "u16", "u18", "u20"
+                                # debian:  "7", "8", "9"
+                                # centos: "c6", "c7", "c8"
+    ip: "10.20.30.31"           # "192.168.33.66" (default)
+    lxcname: "ubuntu20"
+    mount:
+      - "./"           # Location host
+      - "/tmp/lxd"              # Location guest
+    hostuid: 1000
+    hostgid: 1000
+
+
+
+  ## ansible
+  roles:
+     - extras
+
+
+# run playbook for lxd
+# bash install.sh playbook.yml --provision --hosts
+# bash install.sh playbook.yml --provision --hosts --security-privileged
