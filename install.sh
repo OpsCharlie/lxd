@@ -75,6 +75,7 @@ PROVISION=0
 SECURITY=0
 PLAY=
 OUT='/dev/null'
+DOMAIN="domain.com"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -v | --verbose)
@@ -136,11 +137,11 @@ eval $(_parse_yaml /tmp/playbook.yml) && _success || _error "$?"
 
 
 case $_vars_vmos in
-    "d7")
+    "7")
         _lxd_image="images:debian/wheezy/amd64";;
-    "d8")
+    "8")
         _lxd_image="images:debian/jessie/amd64";;
-    "d9")
+    "9")
         _lxd_image="images:debian/9/amd64";;
     "c6")
         _lxd_image="images:centos/6/amd64";;
@@ -150,19 +151,19 @@ case $_vars_vmos in
         _lxd_image="images:centos/8/amd64";;
     "s15")
         _lxd_image="images:opensuse/15.0";;
-    "u12")
+    "12")
         _lxd_image="ubuntu:precise";;
-    "u14")
+    "14")
         _lxd_image="ubuntu:trusty";;
-    "u16")
+    "16")
         _lxd_image="ubuntu:xenial";;
-    "u18")
+    "18")
         _lxd_image="ubuntu:bionic";;
-    "u20")
+    "20")
         _lxd_image="ubuntu:focal";;
     *)
         echo "No OS defined using 20"
-        _vars_vmos="u20"
+        _vars_vmos="20"
         _lxd_image="ubuntu:focal";;
 esac
 
@@ -186,7 +187,7 @@ fi
 _vars_mount[0]=$(echo ${_vars_mount[0]} | tr -d " ")
 
 if [ -z "${_vars_mount[1]}" ]; then
-    _vars_mount[1]="/tmp/lxd"
+    _vars_mount[1]="/var/lxd"
 fi
 _vars_mount[1]=$(echo ${_vars_mount[1]} | tr -d " ")
 
@@ -253,7 +254,7 @@ if ((HOSTS)); then
     if ! grep -qz "$MARKER1.*$MARKER2" /etc/hosts; then
         echo -e "\n$MARKER1\n$MARKER2" | sudo tee -a /etc/hosts
     fi
-    sudo sed -i -e "/$MARKER1/,/$MARKER2/{/$_vars_ip.*/d" -e "s/$MARKER2/$_vars_ip $_vars_lxcname\n$MARKER2/}" /etc/hosts && _success || _error
+    sudo sed -i -e "/$MARKER1/,/$MARKER2/{/$_vars_ip.*/d" -e "s/$MARKER2/$_vars_ip  ${_vars_lxcname}.${DOMAIN} $_vars_lxcname\n$MARKER2/}" /etc/hosts && _success || _error
 fi
 
 if ((PROVISION)); then
@@ -271,10 +272,7 @@ if ((PROVISION)); then
         s*)
             ((VERBOSE)) && echo
             lxc exec "$_vars_lxcname" -- sh -c "zypper install -y python3 && update-alternatives --install /usr/bin/python python /usr/bin/python3 1" >$OUT && _success || _error "$?";;
-        u*)
-            ((VERBOSE)) && echo
-            lxc exec "$_vars_lxcname" -- sh -c "apt-get update && apt-get install -y python" >$OUT && _success || _error "$?";;
-        d*)
+        *)
             ((VERBOSE)) && echo
             lxc exec "$_vars_lxcname" -- sh -c "apt-get update && apt-get install -y python" >$OUT && _success || _error "$?";;
     esac
@@ -282,11 +280,7 @@ if ((PROVISION)); then
 
     _echo "install extra dependencies"
     case $_vars_vmos in
-        "u12"|"u14"|"u16"|"u18"|"u20")
-            ((VERBOSE)) && echo
-            lxc exec "$_vars_lxcname" -- sh -c "apt-get install -y --reinstall openssh-server" >$OUT || _error "$?"
-            ;;
-        "d7"|"d8"|"d9")
+        "7"|"8"|"9"|"12")
             ((VERBOSE)) && echo
             lxc exec "$_vars_lxcname" -- sh -c "apt-get install -y --reinstall openssh-server" >$OUT || _error "$?"
             ;;
@@ -310,11 +304,11 @@ if ((PROVISION)); then
     _lxc_ip=$(lxc list "$_vars_lxcname" | grep "$_vars_lxcname" | awk '{ print $6 }')
     _echo "start playbook: ansible-playbook -i \"$_lxc_ip,\" $PLAY"; echo
     ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$_lxc_ip"
-    export ANSIBLE_HOST_KEY_CHECKING=False
-    ansible-playbook -i "$_lxc_ip," "$PLAY"
+    ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i "$_lxc_ip," "$PLAY"
 fi
 
 
 
+# lxc exec "$_vars_lxcname" -- bash -c "cat /etc/issue; echo ; echo \"IP : \$(hostname -I)\"; echo ; php -v | head -1 | sed \"s/ /\t\t/\"; dpkg -l | egrep 'mysql-server|apache2.*-bin|ii  nginx\ |redis-server' | awk '{ printf \"%-15s %s\n\", \$2, \$3 }'; netstat -tln | grep -q ":1080" && echo Mailcatcher/hog running on port 1080 || echo Mailcatcher not running; netstat -tulpn 2>/dev/null | egrep -q ':8982|:8984' && echo solr running on port 8984 || echo solr not running; netstat -tulpn 2>/dev/null | egrep -q ':5601' && echo kibana running on port 5601 || echo kibana not running"
 lxc exec "$_vars_lxcname" -- bash -c "cat /etc/issue; echo ; echo \"IP : \$(hostname -I)\"; echo"
 echo "mount source=${_vars_mount[0]} path=${_vars_mount[1]}"

@@ -4,8 +4,8 @@
     name: '{{ item }}'
     state: present
   loop:
-      - en_US.UTF-8
-      - nl_BE.UTF-8
+    - en_US.UTF-8
+    - nl_BE.UTF-8
 
 
 - name: install ubuntu extras
@@ -38,4 +38,3 @@
     group: www-data
     state: present
   when: hostuid != '0'
-

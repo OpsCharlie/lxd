@@ -24,7 +24,7 @@
     line: "127.0.0.1 {{ item }}"
     state: present
   with_items:
-  - "{{ hostsfile }}"
+    - "{{ hostsfile }}"
   when: hostsfile is defined
 
 
@@ -50,8 +50,8 @@
   when: git.changed
 
 
-#doesn't work with mitogen
-#- name: install pynvim
+# # doesn't work with mitogen
+# - name: install pynvim
 #  pip:
 #    name: pynvim
 #    state: present
@@ -61,4 +61,3 @@
   shell: pip3 install pynvim
   register: pynvim
   changed_when: '"Successfully" in pynvim.stdout'
-
